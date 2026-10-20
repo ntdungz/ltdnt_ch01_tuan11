@@ -183,21 +183,7 @@ Thất bại  -> chuẩn hóa AppException -> ErrorHandler.report
 
 `FlutterError.onError`, `PlatformDispatcher.instance.onError` và `runZonedGuarded` cũng chuyển lỗi về `ErrorHandler.report()`. `ErrorWidget.builder` tạo giao diện dự phòng cho widget dựng thất bại. Pipeline ghi nhận và hiển thị lỗi; không tự khôi phục toàn bộ trạng thái ứng dụng sau mọi lỗi lập trình.
 
-## 7. Kịch bản live demo
-
-Chọn **Bộ nhớ (RAM)** để demo nghiệp vụ và các lỗi trùng MSSV một cách ổn định.
-
-1. Mở app, xem 5 sinh viên mẫu; chạm vào một sinh viên để xem chi tiết.
-2. Thêm sinh viên hợp lệ, thử sửa, tìm theo tên/MSSV và xóa có xác nhận.
-3. Mở **Demo ngoại lệ**, lần lượt thử không tìm thấy, dữ liệu sai và trùng MSSV.
-4. Bật giả lập mất mạng, xem thông báo; nhấn lại cùng nút để tắt và thử tải lại.
-5. Thử lỗi ép kiểu, mở nhật ký và giải thích lỗi đã được chuyển thành `UnknownException`.
-6. Trên app chạy thật, thử lỗi bất đồng bộ không được bắt và widget lỗi khi dựng; xem log và giao diện dự phòng. Nhấn lại nút widget lỗi để ẩn widget đó.
-7. Nếu có Internet, chuyển Remote API để minh họa Factory thay nguồn dữ liệu mà vẫn dùng cùng giao diện.
-
-Trạng thái giả lập mất mạng dùng chung cho các trang. Cần tắt bằng nút số 4 trước khi quay về danh sách để tải dữ liệu bình thường. Trong debug, IDE có thể dừng tại lỗi cố ý nếu bật tùy chọn break on exceptions; dùng Continue hoặc chạy `flutter run --release` khi demo trên thiết bị.
-
-## 8. Kiểm tra
+## 7. Kiểm tra
 
 ```powershell
 flutter analyze
@@ -218,7 +204,7 @@ Kết quả kiểm tra khi chuẩn bị bản nộp:
 
 Đây là kết quả phân tích, test và build trên máy chuẩn bị; vẫn cần chạy live demo trên điện thoại hoặc máy ảo khi báo cáo.
 
-## 9. Giới hạn hiện tại
+## 8. Giới hạn hiện tại
 
 - Kho RAM chỉ giữ dữ liệu trong tiến trình đang chạy. Khi tiến trình kết thúc, dữ liệu thay đổi và nhật ký mất; lần khởi động mới tạo lại 5 sinh viên mẫu.
 - DummyJSON chỉ giả lập thêm/sửa/xóa, không lưu thay đổi bền vững. Tải lại danh sách sau thao tác có thể vẫn thấy dữ liệu gốc. Kịch bản trùng MSSV nên chạy với kho RAM vì Remote API không thực thi cùng quy tắc này.
@@ -226,7 +212,7 @@ Kết quả kiểm tra khi chuẩn bị bản nộp:
 - Remote dùng `dart:io`, nên bản này chưa hỗ trợ Flutter Web. Cấu hình nền tảng được bàn giao là Android.
 - Chưa có SQLite, lưu trữ lâu dài, xác thực hay DI container. Các phụ thuộc hiện được truyền qua constructor và ghép tại Factory.
 
-## 10. Thành viên và phân công
+## 9. Thành viên và phân công
 
 Phân công công việc theo báo cáo của nhóm:
 
@@ -248,16 +234,7 @@ Bảng phân công chi tiết (WBS):
 | CV07 | Xây dựng giao diện danh sách, thêm/sửa, nhật ký và `ErrorBoundary` | Nguyễn Thị Hà Tiên |
 | CV08 | Chuẩn bị `README.md`, `.env.example`, hướng dẫn cài đặt, slide và demo trên máy ảo Android | Nguyễn Thị Hà Tiên |
 
-Phân chia thuyết trình:
-
-- **Nguyễn Tấn Dũng:** bài toán, phạm vi, kiến trúc; OOP, Generics, Constructor, Mixin; Repository, Factory và pipeline lỗi.
-- **Nguyễn Thị Hà Tiên:** hệ thống ngoại lệ và luồng xử lý; giao diện và demo bảy tình huống; kết quả, hạn chế và hướng phát triển.
-
-Hướng dẫn cài đặt được trình bày tại mục 2-5 của README. Nhóm theo dõi đóng góp của từng thành viên qua lịch sử commit trên GitHub.
-
-Slide thuyết trình là sản phẩm bàn giao riêng; có thể bổ sung vào `docs/` nếu muốn lưu chung repository. APK có thể đính kèm trong GitHub Releases; không cần đưa `build/` lên Git.
-
-## 11. Tài liệu tham khảo
+## 10. Tài liệu tham khảo
 
 - [Dart language](https://dart.dev/language)
 - [Flutter documentation](https://docs.flutter.dev/)
