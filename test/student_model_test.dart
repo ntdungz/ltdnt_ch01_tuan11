@@ -1,57 +1,68 @@
-import 'package:ltdnt_ch01_tuan11/data/models/student_model.dart';
-import 'package:ltdnt_ch01_tuan11/domain/entities/student.dart';
-import 'package:test/test.dart';
+// Kiểm thử factory/named constructor và chuyển JSON bằng flutter_test.
+import 'package:flutter_test/flutter_test.dart';
+import 'package:oop_error_demo/core/errors/app_exception.dart';
+import 'package:oop_error_demo/data/models/student_model.dart';
+
+// Tạo Map mới mỗi lần để thay đổi của một test không lan sang test khác.
+Map<String, dynamic> makeStudentJson() {
+  return <String, dynamic>{
+    'id': 10,
+    'studentCode': 'SV0010',
+    'name': 'Nguyễn Minh',
+    'email': 'minh@dut.vn',
+    'gpa': 3.4,
+  };
+}
 
 void main() {
-  final validJson = <String, Object?>{
-    'id': 'SV001',
-    'fullName': 'Nguyen Tan Dung',
-    'email': 'dung@example.com',
-    'gpa': 3.5,
-  };
-
-  test('factory doc JSON va xuat lai khong mat du lieu', () {
-    final model = StudentModel.fromJson(validJson);
-    expect(model, isA<Student>());
-    expect(model.toJson(), validJson);
+  test('fromJson hợp lệ trả đúng tất cả trường', () {
+    final StudentModel model = StudentModel.fromJson(makeStudentJson());
+    expect(model.id, 10);
+    expect(model.studentCode, 'SV0010');
+    expect(model.name, 'Nguyễn Minh');
+    expect(model.email, 'minh@dut.vn');
+    expect(model.gpa, 3.4);
   });
 
-  test('GPA JSON kieu int duoc chuyen thanh double', () {
-    final model = StudentModel.fromJson({...validJson, 'gpa': 4});
-    expect(model.gpa, isA<double>());
-    expect(model.gpa, 4.0);
+  test('fromJson thiếu bất kỳ trường bắt buộc nào đều ném ValidationException',
+      () {
+    for (final String key in <String>[
+      'id',
+      'studentCode',
+      'name',
+      'email',
+      'gpa'
+    ]) {
+      final Map<String, dynamic> json = makeStudentJson();
+      json.remove(key);
+      expect(() {
+        StudentModel.fromJson(json);
+      }, throwsA(isA<ValidationException>()));
+    }
   });
 
-  for (final key in validJson.keys) {
-    test('JSON thieu $key bao FormatException', () {
-      final incomplete = {...validJson}..remove(key);
-      expect(
-        () => StudentModel.fromJson(incomplete),
-        throwsFormatException,
-      );
-    });
-    test('JSON sai kieu $key bao FormatException', () {
-      final invalid = {...validJson, key: key == 'gpa' ? '3.5' : 123};
-      expect(() => StudentModel.fromJson(invalid), throwsFormatException);
-    });
-  }
-
-  test('chuyen entity thanh model va serialize duoc', () {
-    const entity = Student(
-      id: 'SV001',
-      fullName: 'Nguyen Tan Dung',
-      email: 'dung@example.com',
-      gpa: 3.5,
-    );
-    expect(StudentModel.fromEntity(entity).toJson(), validJson);
+  test('fromJson sai kiểu ở từng trường đều ném ValidationException', () {
+    final Map<String, dynamic> invalidValues = <String, dynamic>{
+      'id': '10',
+      'studentCode': 10,
+      'name': false,
+      'email': <String>[],
+      'gpa': '3.4',
+    };
+    for (final String key in invalidValues.keys) {
+      final Map<String, dynamic> json = makeStudentJson();
+      json[key] = invalidValues[key];
+      expect(() {
+        StudentModel.fromJson(json);
+      }, throwsA(isA<ValidationException>()));
+    }
   });
 
-  test('named constructor dat GPA ban dau bang 0', () {
-    const student = Student.freshman(
-      id: 'SV002',
-      fullName: 'Tran Minh Anh',
-      email: 'anh@example.com',
-    );
-    expect(student.gpa, 0);
+  test('toJson rồi fromJson giữ nguyên dữ liệu ban đầu', () {
+    final Map<String, dynamic> json = makeStudentJson();
+    final StudentModel original = StudentModel.fromJson(json);
+    final StudentModel restored = StudentModel.fromJson(original.toJson());
+    expect(original.toJson(), json);
+    expect(restored.toJson(), original.toJson());
   });
 }

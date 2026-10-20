@@ -1,6 +1,7 @@
-/// Kieu co so de `Repository<T>` chi chap nhan doi tuong co dinh danh.
-abstract class Entity {
-  const Entity({required this.id});
+// GENERICS: lớp cơ sở cho mọi thực thể nghiệp vụ, tổng quát hoá kiểu khoá chính.
+// Ví dụ: Entity<int> cho Student, Entity<String> cho một thực thể dùng mã chuỗi.
+abstract class Entity<ID> {
+  const Entity();
 
-  final String id;
+  ID get id;
 }

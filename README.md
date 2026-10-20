@@ -1,168 +1,246 @@
-# Chủ đề 01 - OOP nâng cao và Design Patterns trong Dart
+# Chủ đề 01 - OOP nâng cao và xử lý ngoại lệ tập trung trong Dart
 
-Phần thực hiện của **SV1**, dùng bài toán quản lý sinh viên để minh họa OOP,
-Repository Pattern và Factory Pattern. Mã nguồn hiện tại là module **Dart thuần**,
-chạy độc lập bằng terminal và có thể đưa vào ứng dụng Flutter khi ghép phần SV2.
+Ứng dụng Flutter quản lý sinh viên, dùng để minh họa OOP nâng cao, Repository Pattern, Factory Pattern và luồng xử lý ngoại lệ tập trung trong môn Dart & Flutter.
 
-## Phân công và phạm vi
+Đây là dự án Flutter dành cho **Android**. Thư mục `lib/` sử dụng bản mã nguồn nâng cấp; dự án không cần Firebase hoặc database để chạy demo mặc định.
 
-Tài liệu phân công được gửi kèm xác định SV1 làm Domain/Repository, SV2 làm
-pipeline xử lý lỗi. PDF đề cương quy định yêu cầu cho cả nhóm, không chia sẵn
-từng file cho mỗi người. Dự án sử dụng cách chia dưới đây:
+## 1. Chức năng
 
-| Thành viên | Công việc | Trạng thái |
+- Xem danh sách và chi tiết sinh viên; thêm, sửa, xóa và tìm kiếm theo tên/MSSV.
+- Kiểm tra MSSV, họ tên, email và GPA theo thang 4.
+- Chuyển giữa hai nguồn dữ liệu: bộ nhớ RAM và Remote API.
+- Chạy các tình huống lỗi, xem thông báo và nhật ký ngay trong ứng dụng.
+- Giả lập mất mạng để minh họa chuẩn hóa lỗi và phục hồi thao tác.
+
+## 2. Môi trường
+
+Môi trường dùng để kiểm tra bản dự án này:
+
+| Thành phần | Phiên bản/cấu hình |
+| --- | --- |
+| Flutter | 3.47.7 stable |
+| Dart | 3.13.5, đi kèm Flutter |
+| Android Gradle Plugin | 9.1.0 |
+| Gradle wrapper | 9.3.1 |
+| Kotlin Gradle Plugin | 2.4.0 |
+| Java khi build trên máy chuẩn bị | JBR 25.0.3 đi kèm Android Studio |
+| Java/Kotlin compilation target | 17 |
+
+Cài Flutter SDK và Android Studio kèm Android SDK, command-line tools, build-tools theo kết quả `flutter doctor -v`. Nên dùng cùng phiên bản Flutter ở trên khi tái hiện bản demo. Dự án có Gradle wrapper, không cần cài Gradle riêng.
+
+Kiểm tra môi trường và chấp nhận Android SDK licenses nếu chưa thực hiện:
+
+```powershell
+flutter --version
+flutter doctor -v
+flutter doctor --android-licenses
+```
+
+Để chạy app cần điện thoại Android bật Developer options/USB debugging và cấp quyền kết nối máy tính, hoặc Android Emulator đã khởi động. Nếu chỉ build APK thì không cần kết nối thiết bị.
+
+## 3. Cài đặt và chạy
+
+Tải/clone repository, mở terminal tại thư mục chứa `pubspec.yaml`:
+
+```powershell
+flutter pub get
+flutter devices
+flutter run -d <device-id>
+```
+
+Thay `<device-id>` bằng ID thiết bị Android trong kết quả `flutter devices`. Nếu chỉ có một thiết bị Android, có thể dùng `flutter run`.
+
+Lần build đầu cần Internet để tải dependency và thành phần Android còn thiếu. Không cần chạy `flutter create`: cấu hình Android đã nằm trong repository. Các file cục bộ như `android/local.properties` được Flutter tạo khi build.
+
+Ứng dụng mặc định dùng kho RAM, khởi tạo 5 sinh viên mẫu và tắt giả lập mất mạng. Chế độ này không cần Internet khi sử dụng app sau khi cài.
+
+### Dùng Flutter từ Puro trên Windows
+
+Nếu `flutter` chưa có trong PATH hoặc lệnh `puro` không hoạt động, có thể gọi trực tiếp Flutter đã cài trong môi trường `stable`:
+
+```powershell
+$flutterBin = Join-Path $env:USERPROFILE '.puro\envs\stable\flutter\bin\flutter.bat'
+& $flutterBin pub get
+& $flutterBin run -d <device-id>
+```
+
+Cách gọi này chỉ áp dụng khi môi trường Puro `stable` đã tồn tại. Với SDK đặt ở nơi khác, thay đường dẫn tương ứng.
+
+## 4. Cấu hình môi trường
+
+Dự án dùng `String.fromEnvironment`, `int.fromEnvironment` và `bool.fromEnvironment`. Flutter nhận các giá trị **lúc biên dịch**, không đọc file `.env` trực tiếp khi app đang chạy. Không cần thêm thư viện dotenv.
+
+Tạo cấu hình cục bộ từ file mẫu:
+
+```powershell
+Copy-Item .env.example .env
+flutter run -d <device-id> --dart-define-from-file=.env
+```
+
+Nội dung mẫu:
+
+```dotenv
+DATA_SOURCE=memory
+API_BASE_URL=https://dummyjson.com
+API_TIMEOUT_SECONDS=10
+SIMULATE_OFFLINE=false
+```
+
+| Biến | Giá trị mặc định | Ý nghĩa |
 | --- | --- | --- |
-| SV1 | Entity, abstract Repository generic, StudentRepository, mixin kiểm tra nghiệp vụ | Đã viết |
-| SV1 | StudentModel với factory JSON, Repository lưu trong RAM, CRUD và tìm kiếm | Đã viết |
-| SV1 | Demo Dart, unit test, hướng dẫn chạy và bàn giao | Đã viết |
-| SV2 | AppException, các exception con và ExceptionFactory | Để trống |
-| SV2 | ErrorHandler, AppLogger, ánh xạ lỗi tại Repository | Để trống |
-| SV2 | Flutter UI, thông báo lỗi và error boundary | Để trống |
+| `DATA_SOURCE` | `memory` | `memory`: kho RAM; `remote`: gọi API |
+| `API_BASE_URL` | `https://dummyjson.com` | URL gốc của API có cấu trúc tương thích DummyJSON users |
+| `API_TIMEOUT_SECONDS` | `10` | Thời gian timeout cho từng giai đoạn request, tính bằng giây; nên đặt số nguyên dương |
+| `SIMULATE_OFFLINE` | `false` | `true`: bật giả lập mất mạng; `false`: tắt |
 
-**Chưa có giao diện Flutter, lưu trữ bền vững, giả lập mất mạng hoặc pipeline
-ghi log lỗi.** Đây là phần SV1 để ghép tiếp, chưa phải demo hoàn chỉnh của nhóm.
-Không cần API key, `.env`, Firebase hoặc cơ sở dữ liệu để chạy phần này.
+Không truyền file cấu hình thì app dùng các giá trị mặc định trong `AppConfig`. Sau khi sửa `.env`, dừng app và chạy lại bằng lệnh có `--dart-define-from-file=.env` để áp dụng cấu hình mới. `.env.example` được đưa lên Git; `.env` cục bộ được bỏ qua.
 
-## Cấu trúc
+Ví dụ chạy Remote API không cần tạo `.env`:
+
+```powershell
+flutter run -d <device-id> --dart-define=DATA_SOURCE=remote
+```
+
+App cũng có menu **Đổi nguồn dữ liệu** để chuyển RAM/Remote khi đang chạy. Android release đã khai báo quyền `INTERNET`; Remote API cần kết nối Internet thật.
+
+## 5. Build APK và cài trên điện thoại
+
+Build bản mặc định, dùng RAM:
+
+```powershell
+flutter build apk --release
+```
+
+Hoặc build với cấu hình riêng:
+
+```powershell
+flutter build apk --release --dart-define-from-file=.env
+```
+
+APK được tạo tại:
 
 ```text
-bin/sv1_demo.dart                      Demo CRUD thành công
+build/app/outputs/flutter-apk/app-release.apk
+```
+
+Chép APK sang điện thoại Android và mở file để cài; cấp quyền cài ứng dụng từ nguồn tương ứng nếu điện thoại yêu cầu. Cũng có thể cài qua USB bằng Android Platform Tools:
+
+```powershell
+adb install -r build/app/outputs/flutter-apk/app-release.apk
+```
+
+Bản release hiện dùng debug signing của Flutter template để phục vụ bài demo, chưa cấu hình khóa phát hành lên Google Play.
+
+## 6. Cấu trúc mã nguồn và nội dung chủ đề
+
+```text
 lib/
+  core/
+    config/       AppConfig, cấu hình lúc biên dịch
+    errors/       AppException, ExceptionFactory, ErrorHandler
+    logger/       AppLogger, LogLevel, Loggable
+    mixins/       Validatable
+    network/      NetworkSimulator dùng chung
+    result/       Result<T>, Success<T>, Failure<T>
   domain/
-    entities/entity.dart              Lớp trừu tượng có id
-    entities/student.dart             Entity bất biến, named constructor
-    repositories/repository.dart      Repository<T extends Entity>
-    repositories/student_repository.dart
-    mixins/student_validation.dart    mixin ... on StudentRepository
+    entities/     Entity<ID>, Student và quy tắc kiểm tra dữ liệu
+    repositories/ Repository<T, ID>, StudentRepository
   data/
-    models/student_model.dart         factory fromJson/fromEntity, toJson
-    repositories/in_memory_student_repository.dart
-  core/                               PHẦN SV2: các file rỗng
-    errors/app_exception.dart
-    errors/exception_factory.dart
-    errors/error_handler.dart
-    logger/app_logger.dart
-  presentation/main.dart              PHẦN SV2: file rỗng
-test/
-  student_repository_test.dart
-  student_model_test.dart
+    models/       StudentModel, chuyển đổi JSON/API
+    repositories/ Kho RAM, Remote API, Factory, chuẩn hóa lỗi repository
+  presentation/
+    widgets/      ErrorBoundary, FallbackErrorWidget
+    ...           Danh sách, form, demo ngoại lệ, nhật ký
+  main.dart       Khởi tạo, chọn Repository và đăng ký xử lý lỗi toàn cục
+android/          Cấu hình và tài nguyên Android
+test/             Unit test và widget test
+.env.example      Cấu hình mẫu
 ```
 
-`Domain` không import `Data`, Flutter hoặc thư viện giao diện.
-`Data` phụ thuộc các hợp đồng trong `Domain`.
-`bin/sv1_demo.dart` khởi tạo implementation rồi truyền vào hàm demo thông qua
-`StudentRepository`. Sau này UI cũng nhận hợp đồng này qua constructor.
+| Nội dung | Đoạn mã chính |
+| --- | --- |
+| Factory/named constructor | [Student](lib/domain/entities/student.dart), [StudentModel](lib/data/models/student_model.dart), [AppConfig](lib/core/config/app_config.dart) |
+| Mixins | [Validatable](lib/core/mixins/validatable.dart), [Loggable](lib/core/logger/loggable.dart), [RepositoryErrorMapper](lib/data/repositories/repository_error_mapper.dart) |
+| Generics | [Repository](lib/domain/repositories/repository.dart), [Result](lib/core/result/result.dart), `ErrorHandler.guard<T>()` |
+| Domain Layer riêng | [domain](lib/domain), không import Flutter hay lớp triển khai ở Data |
+| Repository Pattern | [StudentRepository](lib/domain/repositories/student_repository.dart) và hai lớp triển khai trong Data |
+| Factory Pattern | [RepositoryFactory](lib/data/repositories/repository_factory.dart) |
+| Custom exceptions | [AppException và các lớp con](lib/core/errors/app_exception.dart) |
+| `try/catch/finally`, `rethrow` | `StudentRepositoryImpl.add()`, `RemoteStudentRepository._send()` |
+| Pipeline tập trung | [ExceptionFactory](lib/core/errors/exception_factory.dart), [ErrorHandler](lib/core/errors/error_handler.dart), [AppLogger](lib/core/logger/app_logger.dart) |
+| Error boundary và lỗi toàn cục | [ErrorBoundary](lib/presentation/widgets/error_boundary.dart), [FallbackErrorWidget](lib/presentation/widgets/fallback_error_widget.dart), [main.dart](lib/main.dart) |
 
-## Cài đặt và chạy trên PowerShell
+Luồng thao tác thông thường:
 
-Cần Dart SDK từ 3.4 đến dưới 4.0, có thể dùng Dart đi kèm Flutter.
-Môi trường dùng để kiểm tra dự án: Dart 3.12.2 đi kèm bộ Flutter trên máy.
+```text
+UI -> ErrorHandler.guard<T> -> StudentRepository (interface)
+                              -> Kho RAM hoặc Remote API do Factory chọn
+Thành công -> Success<T> -> UI cập nhật
+Thất bại  -> chuẩn hóa AppException -> ErrorHandler.report
+          -> ghi log + phát ErrorEvent -> ErrorBoundary hiện SnackBar
+          -> Failure<T> trả về tầng gọi
+```
 
-Nếu `dart` đã có trong PATH:
+`FlutterError.onError`, `PlatformDispatcher.instance.onError` và `runZonedGuarded` cũng chuyển lỗi về `ErrorHandler.report()`. `ErrorWidget.builder` tạo giao diện dự phòng cho widget dựng thất bại. Pipeline ghi nhận và hiển thị lỗi; không tự khôi phục toàn bộ trạng thái ứng dụng sau mọi lỗi lập trình.
+
+## 7. Kịch bản live demo
+
+Chọn **Bộ nhớ (RAM)** để demo nghiệp vụ và các lỗi trùng MSSV một cách ổn định.
+
+1. Mở app, xem 5 sinh viên mẫu; chạm vào một sinh viên để xem chi tiết.
+2. Thêm sinh viên hợp lệ, thử sửa, tìm theo tên/MSSV và xóa có xác nhận.
+3. Mở **Demo ngoại lệ**, lần lượt thử không tìm thấy, dữ liệu sai và trùng MSSV.
+4. Bật giả lập mất mạng, xem thông báo; nhấn lại cùng nút để tắt và thử tải lại.
+5. Thử lỗi ép kiểu, mở nhật ký và giải thích lỗi đã được chuyển thành `UnknownException`.
+6. Trên app chạy thật, thử lỗi bất đồng bộ không được bắt và widget lỗi khi dựng; xem log và giao diện dự phòng. Nhấn lại nút widget lỗi để ẩn widget đó.
+7. Nếu có Internet, chuyển Remote API để minh họa Factory thay nguồn dữ liệu mà vẫn dùng cùng giao diện.
+
+Trạng thái giả lập mất mạng dùng chung cho các trang. Cần tắt bằng nút số 4 trước khi quay về danh sách để tải dữ liệu bình thường. Trong debug, IDE có thể dừng tại lỗi cố ý nếu bật tùy chọn break on exceptions; dùng Continue hoặc chạy `flutter run --release` khi demo trên thiết bị.
+
+## 8. Kiểm tra
 
 ```powershell
-cd E:\ltdnt\ch01
-dart pub get
-dart run bin/sv1_demo.dart
-dart analyze
-dart test
+flutter analyze
+flutter test
+flutter build apk --release
 ```
 
-Trên máy hiện tại, Dart được tìm thấy ở đường dẫn sau. Nếu terminal báo không
-nhận diện `dart`, dùng:
+Test gồm kiểm tra JSON/model, validation, CRUD kho RAM, không tái sử dụng ID, giả lập mất mạng, phân loại thông báo/log và luồng giao diện thêm sinh viên, xem lỗi, xem/xóa nhật ký. Test không gọi API công khai và không thay thế việc live demo lỗi toàn cục trên thiết bị thật.
 
-```powershell
-cd E:\ltdnt\ch01
-$dartSdk = 'E:\fluter\flutter_windows_3.44.9-stable\flutter\bin\dart.bat'
-& $dartSdk pub get
-& $dartSdk run bin/sv1_demo.dart
-& $dartSdk analyze
-& $dartSdk test
-```
+Kết quả kiểm tra khi chuẩn bị bản nộp:
 
-Giữ `pubspec.lock` trong Git để hai thành viên dùng cùng phiên bản package.
-`lints` và `test` chỉ phục vụ phát triển; code nghiệp vụ không cần package ngoài.
+| Kiểm tra | Kết quả |
+| --- | --- |
+| `flutter analyze` | Không có vấn đề |
+| `flutter test --reporter expanded` | 23/23 test thành công |
+| `flutter build apk --release --dart-define-from-file=.env.example` | Build thành công, APK khoảng 48 MB |
+| Đối chiếu thư mục `lib/` | 25/25 file khớp từng byte với bản lib nâng cấp dùng để chuẩn bị gói |
 
-## Kịch bản demo SV1
+Đây là kết quả phân tích, test và build trên máy chuẩn bị; vẫn cần chạy live demo trên điện thoại hoặc máy ảo khi báo cáo.
 
-1. Tạo `SV001` bằng `StudentModel.fromJson`, tạo `SV002` bằng `Student.freshman`.
-2. Thêm hai sinh viên qua interface `StudentRepository`, đọc danh sách.
-3. Sửa GPA của `SV001` từ 3.2 thành 3.8 bằng `copyWith` và `update`.
-4. Tìm tên chứa `minh` và chuyển một entity thành JSON.
-5. Xóa `SV002`, đọc lại danh sách còn `SV001`.
+## 9. Giới hạn hiện tại
 
-Mỗi lần chạy demo tạo Repository mới. Dữ liệu chỉ nằm trong RAM, không lưu sau
-khi chương trình dừng. GPA theo thang 4. Tìm kiếm bỏ khoảng trắng hai đầu và
-không phân biệt chữ hoa/thường; chưa hỗ trợ tìm không dấu.
+- Kho RAM chỉ giữ dữ liệu trong tiến trình đang chạy. Khi tiến trình kết thúc, dữ liệu thay đổi và nhật ký mất; lần khởi động mới tạo lại 5 sinh viên mẫu.
+- DummyJSON chỉ giả lập thêm/sửa/xóa, không lưu thay đổi bền vững. Tải lại danh sách sau thao tác có thể vẫn thấy dữ liệu gốc. Kịch bản trùng MSSV nên chạy với kho RAM vì Remote API không thực thi cùng quy tắc này.
+- Nhật ký giữ tối đa 200 bản ghi trong RAM và đồng thời in ra console, chưa ghi file hoặc gửi lên máy chủ.
+- Remote dùng `dart:io`, nên bản này chưa hỗ trợ Flutter Web. Cấu hình nền tảng được bàn giao là Android.
+- Chưa có SQLite, lưu trữ lâu dài, xác thực hay DI container. Các phụ thuộc hiện được truyền qua constructor và ghép tại Factory.
 
-## Các đoạn SV1 cần hiểu khi trình bày
+## 10. Thành viên và phân công
 
-- **Abstract class và generics:** `Repository<T extends Entity>` là hợp đồng
-  CRUD; ràng buộc `extends Entity` đảm bảo kiểu dữ liệu có `id`.
-- **Kế thừa:** `Student extends Entity`, `StudentRepository extends
-  Repository<Student>`. Implementation kế thừa abstract repository và phải
-  viết đủ các phương thức. Có thể dùng `implements` nếu chỉ muốn nhận hợp đồng,
-  nhưng mixin có `on StudentRepository` ở đây cần quan hệ kế thừa phù hợp.
-- **Named constructor:** `Student.freshman` có tên riêng và gán GPA mặc định 0.
-- **Factory constructor:** `StudentModel.fromJson` kiểm tra kiểu dữ liệu trước
-  khi trả về model; `fromEntity` chuyển entity sang model để serialize.
-  Factory không có nghĩa bắt buộc là singleton hoặc cache instance.
-- **Mixin:** `StudentValidation` tái sử dụng kiểm tra nghiệp vụ bằng `with`;
-  `on StudentRepository` giới hạn lớp được phép áp dụng mixin.
-- **Bất biến:** các field là `final`; sửa qua `copyWith`. Danh sách trả về là
-  snapshot chỉ đọc để bên gọi không sửa được collection nội bộ.
+Trước khi nộp, điền tên/MSSV của hai thành viên và điều chỉnh bảng dưới đây theo công việc thực tế. Đây là bảng chờ hoàn thiện thông tin, không phải xác nhận phân công đã thực hiện.
 
-## Điểm nối dành cho SV2
-
-Các file `lib/core/**/*.dart` và `lib/presentation/main.dart` hiện có kích thước
-0 byte, chưa được import. Không thêm code xử lý lỗi tập trung vào chúng ở bước
-SV1 này. `presentation/main.dart` là chỗ giữ phần việc, chưa phải entry point
-Flutter có thể chạy. SV2 cần bổ sung cấu hình ứng dụng Flutter và thư mục nền
-tảng khi làm giao diện, đồng thời giữ nguyên Domain độc lập.
-
-Các lỗi hiện được phát sinh và truyền nguyên ra bên gọi:
-
-| Tình huống | Lỗi hiện tại | Hướng tích hợp SV2 |
+| Thành viên | Họ tên, MSSV | Phần việc thực tế |
 | --- | --- | --- |
-| Mã rỗng/có khoảng trắng hai đầu, tên trống, email sai, GPA sai | `ArgumentError` | Chuyển thành `ValidationException` |
-| Trùng mã, đọc/sửa/xóa mã không tồn tại | `StateError` | Phân loại duplicate và not-found trong lớp adapter hoặc tại nơi phát sinh |
-| JSON thiếu field hoặc sai kiểu | `FormatException` | Chuyển thành exception dữ liệu |
+| Thành viên 1 | Chưa điền | Chưa điền |
+| Thành viên 2 | Chưa điền | Chưa điền |
 
-Validation nghiệp vụ xảy ra tại `add`/`update`, trước khi đổi dữ liệu. Factory
-chỉ kiểm tra cấu trúc/kiểu JSON; dữ liệu đúng kiểu nhưng sai nghiệp vụ vẫn bị
-Repository từ chối khi ghi. Các lỗi chuẩn nêu trên là tín hiệu tạm thời của
-module SV1, chưa phải hệ thống custom exceptions.
+Nhóm cần có bảng WBS rõ nhiệm vụ và người phụ trách, cùng lịch sử commit thể hiện đúng đóng góp của từng thành viên theo đề bài.
 
-SV2 có thể tạo decorator `StudentRepository` để bắt/chuyển đổi lỗi, hoặc thống
-nhất sửa phần implementation. Không suy ra mọi `StateError` đều là not-found;
-cần phân biệt trùng mã với không tồn tại. Khi đổi loại lỗi, cập nhật unit test
-cho đúng hợp đồng mới. Không nuốt lỗi bằng cách trả danh sách rỗng.
+Slide thuyết trình là sản phẩm bàn giao riêng; có thể bổ sung vào `docs/` nếu muốn lưu chung repository. APK có thể đính kèm trong GitHub Releases; không cần đưa `build/` lên Git.
 
-`ArgumentError` và `StateError` kế thừa `Error`, không phải `Exception`;
-`on Exception` sẽ không bắt được chúng. Khi ghép pipeline, cần thống nhất thay
-các tín hiệu nghiệp vụ này bằng custom exceptions hoặc bắt đúng từng kiểu tại
-điểm chuyển đổi. Không gom mọi lỗi lập trình thành lỗi nghiệp vụ.
+## 11. Tài liệu tham khảo
 
-Các hook `FlutterError.onError`, `PlatformDispatcher.instance.onError`,
-`runZonedGuarded`, giả lập lỗi mạng, ghi log và SnackBar/Dialog là phần chưa làm.
-Demo trực tiếp trên thiết bị/emulator theo đề cương được thực hiện sau khi nhóm
-hoàn thiện phần Flutter.
-
-## Kết quả kiểm tra phần SV1
-
-- Demo terminal hoàn thành đủ thêm, đọc, cập nhật, tìm kiếm và xóa.
-- 28 unit test kiểm tra JSON, CRUD, dữ liệu không hợp lệ và bảo toàn dữ liệu.
-- Chạy `dart analyze` để kiểm tra tĩnh trước khi bàn giao.
-
-## Git
-
-Mã nguồn được để ở máy, **chưa commit và chưa push** trong lần thực hiện này.
-Để giữ commit riêng cho SV1, bạn có thể chạy các lệnh sau khi đã xem và hiểu code:
-
-```powershell
-git switch -c feature/domain-repository
-git add .
-git commit -m "feat: implement SV1 domain and student repository"
-```
-
-Lệnh push chỉ chạy khi bạn muốn đưa phần này lên GitHub.
+- [Dart language](https://dart.dev/language)
+- [Flutter documentation](https://docs.flutter.dev/)
+- [DummyJSON Users API](https://dummyjson.com/docs/users)
