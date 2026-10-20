@@ -228,14 +228,32 @@ Kết quả kiểm tra khi chuẩn bị bản nộp:
 
 ## 10. Thành viên và phân công
 
-Trước khi nộp, điền tên/MSSV của hai thành viên và điều chỉnh bảng dưới đây theo công việc thực tế. Đây là bảng chờ hoàn thiện thông tin, không phải xác nhận phân công đã thực hiện.
+Phân công công việc theo báo cáo của nhóm:
 
-| Thành viên | Họ tên, MSSV | Phần việc thực tế |
+| TT | Họ và tên | Phạm vi phụ trách | Đóng góp |
+| --- | --- | --- | --- |
+| 1 | Nguyễn Tấn Dũng | Domain, Data, pipeline xử lý lỗi, bắt lỗi toàn cục và unit test | 50% |
+| 2 | Nguyễn Thị Hà Tiên | Hệ thống ngoại lệ, log và mạng, giao diện, tài liệu, slide và demo | 50% |
+
+Bảng phân công chi tiết (WBS):
+
+| Mã việc | Nội dung công việc | Người phụ trách |
 | --- | --- | --- |
-| Thành viên 1 | Chưa điền | Chưa điền |
-| Thành viên 2 | Chưa điền | Chưa điền |
+| CV01 | Xây dựng Domain: `Entity`, `Repository` generic, `StudentRepository`, `Student` và mixin `Validatable` | Nguyễn Tấn Dũng |
+| CV02 | Xây dựng Data: `StudentModel`, kho RAM, Remote API và `RepositoryFactory` | Nguyễn Tấn Dũng |
+| CV03 | Xây dựng pipeline tập trung: `ErrorHandler`, `Result<T>` và `RepositoryErrorMapper` | Nguyễn Tấn Dũng |
+| CV04 | Tích hợp bắt lỗi toàn cục trong `main.dart`, giao diện dự phòng `FallbackErrorWidget` và unit test | Nguyễn Tấn Dũng |
+| CV05 | Xây dựng hệ thống ngoại lệ: `AppException`, các lớp con và `ExceptionFactory` | Nguyễn Thị Hà Tiên |
+| CV06 | Xây dựng log và giả lập mạng: `AppLogger`, `Loggable`, `NetworkSimulator` | Nguyễn Thị Hà Tiên |
+| CV07 | Xây dựng giao diện danh sách, thêm/sửa, nhật ký và `ErrorBoundary` | Nguyễn Thị Hà Tiên |
+| CV08 | Chuẩn bị `README.md`, `.env.example`, hướng dẫn cài đặt, slide và demo trên máy ảo Android | Nguyễn Thị Hà Tiên |
 
-Nhóm cần có bảng WBS rõ nhiệm vụ và người phụ trách, cùng lịch sử commit thể hiện đúng đóng góp của từng thành viên theo đề bài.
+Phân chia thuyết trình:
+
+- **Nguyễn Tấn Dũng:** bài toán, phạm vi, kiến trúc; OOP, Generics, Constructor, Mixin; Repository, Factory và pipeline lỗi.
+- **Nguyễn Thị Hà Tiên:** hệ thống ngoại lệ và luồng xử lý; giao diện và demo bảy tình huống; kết quả, hạn chế và hướng phát triển.
+
+Hướng dẫn cài đặt được trình bày tại mục 2-5 của README. Nhóm theo dõi đóng góp của từng thành viên qua lịch sử commit trên GitHub.
 
 Slide thuyết trình là sản phẩm bàn giao riêng; có thể bổ sung vào `docs/` nếu muốn lưu chung repository. APK có thể đính kèm trong GitHub Releases; không cần đưa `build/` lên Git.
 
